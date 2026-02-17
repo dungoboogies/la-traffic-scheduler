@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   title: "LA Traffic Scheduler",
   description: "Optimize your driving routes between appointments",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Scheduler",
+  },
 };
 
 export const viewport: Viewport = {
