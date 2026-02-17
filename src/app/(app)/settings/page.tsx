@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { useState, useEffect, useCallback } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/api";
-import { RefreshCw, Check, ExternalLink, LogOut } from "lucide-react";
+import { RefreshCw, Check, ExternalLink, LogOut, Shield } from "lucide-react";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
+import Link from "next/link";
 
 interface Settings {
   name: string | null;
@@ -16,6 +18,7 @@ interface Settings {
 }
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -82,6 +85,12 @@ export default function SettingsPage() {
     setSyncing(false);
   };
 
+  const handleAddressChange = useCallback((address: string) => {
+    setForm((prev) => ({ ...prev, homeAddress: address }));
+  }, []);
+
+  const isAdmin = (session?.user as any)?.role === "admin";
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -93,6 +102,17 @@ export default function SettingsPage() {
   return (
     <div className="px-4 pt-4 pb-safe">
       <h1 className="text-xl font-bold mb-4">Settings</h1>
+
+      {/* Admin link */}
+      {isAdmin && (
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4 text-sm font-medium text-primary"
+        >
+          <Shield className="w-4 h-4" />
+          Admin Panel
+        </Link>
+      )}
 
       {/* Google Calendar */}
       <div className="bg-white rounded-xl border border-border p-4 mb-4">
@@ -137,12 +157,10 @@ export default function SettingsPage() {
         </div>
         <div>
           <label className="text-xs text-muted block mb-1">Home Address</label>
-          <input
-            type="text"
+          <AddressAutocomplete
             value={form.homeAddress}
-            onChange={(e) => setForm({ ...form, homeAddress: e.target.value })}
+            onChange={handleAddressChange}
             placeholder="1000 Westwood Blvd, Los Angeles, CA"
-            className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>

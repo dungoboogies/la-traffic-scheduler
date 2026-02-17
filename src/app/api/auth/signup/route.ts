@@ -15,9 +15,18 @@ export async function POST(req: NextRequest) {
   }
 
   const hashed = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: { email, password: hashed, name: name || email.split("@")[0] },
+  await prisma.user.create({
+    data: {
+      email,
+      password: hashed,
+      name: name || email.split("@")[0],
+      role: "user",
+      status: "pending",
+    },
   });
 
-  return NextResponse.json({ id: user.id, email: user.email });
+  return NextResponse.json({
+    message: "Account created. An admin will review and approve your access shortly.",
+    pending: true,
+  });
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { MapPin } from "lucide-react";
+import { MapPin, Clock } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,11 +12,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setInfo("");
     setLoading(true);
 
     try {
@@ -26,9 +28,14 @@ export default function LoginPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password, name }),
         });
+        const data = await res.json();
         if (!res.ok) {
-          const data = await res.json();
           throw new Error(data.error || "Signup failed");
+        }
+        if (data.pending) {
+          setInfo(data.message);
+          setLoading(false);
+          return;
         }
       }
 
@@ -39,7 +46,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        if (result.error.includes("PENDING_APPROVAL")) {
+          setInfo("Your account is pending admin approval. You'll be able to sign in once approved.");
+        } else if (result.error.includes("ACCOUNT_DISABLED")) {
+          setError("Your account has been disabled. Contact an administrator.");
+        } else {
+          setError("Invalid email or password");
+        }
       } else {
         router.push("/dashboard");
       }
@@ -88,8 +101,13 @@ export default function LoginPage() {
             className="w-full px-4 py-3 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
           />
 
-          {error && (
-            <p className="text-danger text-sm text-center">{error}</p>
+          {error && <p className="text-danger text-sm text-center">{error}</p>}
+
+          {info && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+              <Clock className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+              <p className="text-amber-700 text-sm">{info}</p>
+            </div>
           )}
 
           <button
@@ -97,25 +115,19 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 bg-primary text-white rounded-xl text-sm font-semibold disabled:opacity-50"
           >
-            {loading ? "..." : isSignup ? "Create Account" : "Sign In"}
+            {loading ? "..." : isSignup ? "Request Access" : "Sign In"}
           </button>
         </form>
 
         <p className="text-center text-sm text-muted mt-6">
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => { setIsSignup(!isSignup); setError(""); }}
+            onClick={() => { setIsSignup(!isSignup); setError(""); setInfo(""); }}
             className="text-primary font-medium"
           >
-            {isSignup ? "Sign in" : "Sign up"}
+            {isSignup ? "Sign in" : "Request access"}
           </button>
         </p>
-
-        <div className="mt-8 p-3 bg-blue-50 rounded-xl text-center">
-          <p className="text-xs text-muted">
-            Demo: <strong>josh@example.com</strong> / <strong>demo123</strong>
-          </p>
-        </div>
       </div>
     </div>
   );

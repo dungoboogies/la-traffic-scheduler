@@ -23,10 +23,20 @@ export const authOptions: NextAuthOptions = {
         const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) return null;
 
+        // Block unapproved users
+        if (user.status !== "approved") {
+          throw new Error(
+            user.status === "pending"
+              ? "PENDING_APPROVAL"
+              : "ACCOUNT_DISABLED"
+          );
+        }
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
+          role: user.role,
           googleConnected: !!user.googleAuth,
         };
       },
@@ -37,6 +47,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.userId = user.id;
+        token.role = (user as any).role;
         token.googleConnected = (user as any).googleConnected;
       }
       return token;
@@ -44,6 +55,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.userId;
+        (session.user as any).role = token.role;
         (session.user as any).googleConnected = token.googleConnected;
       }
       return session;

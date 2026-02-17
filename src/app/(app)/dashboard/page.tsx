@@ -9,6 +9,7 @@ import {
 } from "@hello-pangea/dnd";
 import { Route, Sparkles, Plus, RefreshCw } from "lucide-react";
 import AppointmentCard from "@/components/AppointmentCard";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { apiFetch } from "@/lib/api";
 import { formatDate, currency, cn, minutesUntil, getLeaveStatus } from "@/lib/utils";
 
@@ -286,12 +287,10 @@ export default function DashboardPage() {
               className="px-3 py-2.5 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          <input
-            type="text"
-            placeholder="Address"
+          <AddressAutocomplete
             value={addForm.location}
-            onChange={(e) => setAddForm({ ...addForm, location: e.target.value })}
-            className="w-full px-3 py-2.5 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(address) => setAddForm({ ...addForm, location: address })}
+            placeholder="Address"
           />
           <input
             type="number"

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
@@ -24,6 +25,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <Providers>{children}</Providers>
+        {process.env.GOOGLE_MAPS_API_KEY && (
+          <Script
+            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY}&libraries=places`}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
