@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  password      String
+  name          String?
+  homeAddress   String?       @map("home_address")
+  homeLat       Float?        @map("home_lat")
+  homeLng       Float?        @map("home_lng")
+  defaultBuffer Int           @default(5) @map("default_buffer")
+  workStart     String        @default("08:00") @map("work_start")
+  workEnd       String        @default("18:00") @map("work_end")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  googleAuth    GoogleAuth?
+  appointments  Appointment[]
+  clients       Client[]
+
+  @@map("users")
+}
+
+model GoogleAuth {
+  id           String    @id @default(cuid())
+  userId       String    @unique @map("user_id")
+  refreshToken String    @map("refresh_token")
+  accessToken  String?   @map("access_token")
+  expiresAt    DateTime? @map("expires_at")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("google_auth")
+}
+
+model Appointment {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  googleEventId   String?  @map("google_event_id")
+  title           String
+  startTime       DateTime @map("start_time")
+  endTime         DateTime @map("end_time")
+  location        String?
+  address         String?
+  lat             Float?
+  lng             Float?
+  clientName      String?  @map("client_name")
+  sessionRate     Float?   @map("session_rate")
+  driveTimeMin    Int?     @map("drive_time_min")
+  driveDistMiles  Float?   @map("drive_dist_miles")
+  sequenceOrder   Int      @default(0) @map("sequence_order")
+  syncedAt        DateTime @default(now()) @map("synced_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, googleEventId])
+  @@index([userId, startTime])
+  @@map("appointments")
+}
+
+model Client {
+  id             String @id @default(cuid())
+  userId         String @map("user_id")
+  name           String
+  defaultRate    Float  @map("default_rate")
+  address        String?
+  lat            Float?
+  lng            Float?
+  totalSessions  Int    @default(0) @map("total_sessions")
+  totalRevenue   Float  @default(0) @map("total_revenue")
+  totalDriveTime Int    @default(0) @map("total_drive_time")
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("clients")
+}
